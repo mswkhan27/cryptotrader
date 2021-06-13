@@ -1,0 +1,338 @@
+<html>
+<head>
+    <title>{{ title }}</title>
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+   <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <link rel="stylesheet" href={{ url_for('static', filename='css/style.css') }}>
+
+<style>
+
+ body{
+           background-image : url("{{  url_for('static',filename='images/exchange-2-header.jpg') }}");
+           background-size: cover;
+          background-repeat: no-repeat;
+    }
+
+#my_balance{
+
+    padding:10px;
+    background-color: #282828;
+    width:80%;
+    border-radius:10px ;
+}
+#my_balance h2{
+
+    color:white;
+}
+
+#balance_table td{
+    padding:5px;
+    font-weight: bold;
+    padding-right:20px;
+    padding-left:20px;
+    color:white;
+}
+.row{
+
+    margin-top:50px ;
+}
+.sidecol{
+
+    padding: 20px;
+}
+
+.btn-primary {
+    background-color: #282828;
+    border:none;
+    padding-left:30px;
+    padding-right:30px;
+}
+.form-control{
+   width: 60%;
+    color: white ;
+    background-color: transparent !important;
+    border: 1px solid white !important;
+}
+input::placeholder{
+      color:white !important;
+}
+.run{
+
+    border-radius: 10px;
+    background-color: white;
+    padding:5px;
+    padding-right: 10px;
+    padding-left: 10px;
+    color:black;
+    font-weight: bold;
+}
+.w{
+    background-color: white !important;
+    color:black;
+}
+#buy{
+    background-color: mediumseagreen;
+}
+#sell{
+    background-color:#E40000;
+}
+</style>
+
+
+</head>
+<body>
+<div class="container">
+
+<div class="row">
+
+    <h4 style="font-size: 30px;color:white"> <strong><span >Crypto</span><span style="background-color: #1F1F1F; padding: 10px">Trader</span></strong></h4>
+
+</div>
+
+  <div class="row">
+    <div class="col sidecol">
+    <center>
+
+        <div id="symbol_price">
+
+        </div>
+        <div id="crypto_price">
+
+    </div>
+
+    <input onchange="symbolFunc(this)" class="form-control w"  list="symbol" name="symbol" value="BTCUSDT">
+        <datalist id="symbol" >
+          {% for symbol in symbols %}
+                <option>
+                    {{ symbol['symbol'] }}
+                </option>
+          {% endfor %}
+
+        </datalist>
+
+    <br>
+
+     <div id="my_balance">
+
+            <h2><b>Balance</b></h2>
+
+     <div id="my_balance_items">
+        <center>
+            <table id="balance_table">
+
+                         {% for asset,free in balancetpl %}
+                             <tr>
+                                 <td style="text-align: left">
+                                     {{ asset }}
+                                 </td>
+                                 <td style="font-weight:400">
+                                     {{ free }}
+                                 </td>
+                             </tr>
+
+
+
+                        {% endfor %}
+
+                    </table>
+
+        </center>
+
+
+
+     </div>
+
+        </div>
+     </center>
+    </div>
+    <div class="col-8">
+
+<!--
+        <h2>Trades</h2>
+    <div id="chart"></div><br>
+    <div id="trades"></div>
+!-->
+<center>
+
+
+
+    <div>
+    <span id="err" style="background-color: #E84C3D; color: white;font-size: 14px" width="300px">
+
+       {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class=flashes>
+                    {% for message in messages %}
+                        {% if message =='Succesfully Sold!' %}
+                        <p style="width:200px; font-size:16px; background-color: mediumseagreen">{{ message }}</p>
+                        {% elif message =='Succesfully Bought!' %}
+                        <p style=" width:200px; font-size:16px; background-color: mediumseagreen">{{ message }}</p>
+                        {% else %}
+                        <p style="width:200px; font-size:16px; background-color: #E40000">{{ message }}</p>
+                        {% endif %}
+
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+    </span>
+</center>
+    <center>
+
+
+
+
+
+         <form method="post" style="margin-top: 100px">
+
+
+                <input class="form-control" type="text" id="quantity" name="quantity" placeholder="Quanity eg: 0.001" />
+            <br>
+                    <input  class="form-control"  list="symbol" name="symbol" placeholder="Choose Pair">
+            <datalist id="symbol" >
+              {% for symbol in symbols %}
+                    <option>
+                        {{ symbol['symbol'] }}
+                    </option>
+              {% endfor %}
+
+            </datalist>
+
+    <br><br>
+
+
+                <input class="btn btn-primary btn-lg" formaction="/buy" type="submit" name="buy" id="buy" value="BUY"/>
+            <input class="btn btn-primary btn-lg" formaction="/sell" type="submit" name="sell" id="sell" value="SELL"/>
+
+            </form>
+
+
+    </center>
+
+
+
+    </div>
+
+
+    </div>
+
+
+
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+<div>
+
+
+
+
+
+
+<script>
+    var symbol="btcusdt"
+    var url= "wss://stream.binance.com:9443/ws/"+symbol+"@kline_5m";
+
+    var tradeDiv=document.getElementById('trades');
+    var symbolPrice=document.getElementById('symbol_price');
+    var cryptoPrice=document.getElementById('crypto_price');
+
+    cryptoPrice.style.fontSize='30px';
+    cryptoPrice.style.fontWeight='800';
+
+
+
+    var binanceSocket = new WebSocket(url);
+    binanceSocket.onmessage = function (event) {
+         /*console.log(event.data);*/
+         var message = JSON.parse(event.data);
+
+         var candlestick = message.k;
+         console.log(message);
+
+         cryptoPrice.innerHTML = candlestick.c;
+         symbolPrice.innerHTML ="<strong>"+symbol.toUpperCase()+"</strong>";
+
+     }
+
+
+    function symbolFunc(elem) {
+     symbol=elem.value;
+
+     binanceSocket.close();
+            binanceSocket="";
+            symbol=symbol.toLowerCase();
+            url= "wss://stream.binance.com:9443/ws/"+symbol+"@kline_5m";
+
+            binanceSocket = new WebSocket(url);
+            console.log(binanceSocket);
+            binanceSocket.onmessage = function (event) {
+                 /*console.log(event.data);*/
+                 var message = JSON.parse(event.data);
+                 var candlestick = message.k;
+                 cryptoPrice.innerHTML = candlestick.c ;
+                 symbolPrice.innerHTML ="<strong>"+symbol.toUpperCase()+"</strong>";
+
+
+             }
+    }
+
+
+
+    function runSocket() {
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+     /* binanceSocket.onmessage=function (event) {
+        console.log(event.data);
+        var message = JSON.parse(event.data);
+
+        var candlestick = message.k;
+
+        cryptoPrice.innerHTML=candlestick.c;
+    }*/
+
+
+
+/*
+    console.log(binanceSocket);
+    binanceSocket.onmessage=function (event){
+        console.log(event.data);
+
+        var messageObject=JSON.parse(event.data);
+        tradeDiv.append(messageObject.p);
+
+    }
+*/
+
+</script>
+
+<script src="{{ url_for('static', filename='scripts/chart.js') }}"></script>
+</body>
+
+
+</html>

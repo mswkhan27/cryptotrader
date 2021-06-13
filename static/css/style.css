@@ -1,0 +1,24 @@
+body {
+
+  height: 100vh; font-family: Arial; text-align:center; font-family: Arial, Helvetica, sans-serif;}
+h1 {text-align:center;}
+
+
+ body::-webkit-scrollbar {
+  width: 12px;               /* width of the entire scrollbar */
+}
+
+body::-webkit-scrollbar-track {
+  background: #FCBF80;        /* color of the tracking area */
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: white;    /* color of the scroll thumb */
+  border-radius: 20px;       /* roundness of the scroll thumb */
+  border: 3px solid white;  /* creates padding around scroll thumb */
+}
+
+.container{
+  margin-top: 10px;
+
+}
